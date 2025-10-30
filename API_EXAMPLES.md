@@ -292,12 +292,19 @@ async function fullCycle() {
     const system = new SuperalgosSystem();
     await system.initialize();
     
-    // Wait for deep think
+    // Wait for deep think with timeout protection
     let deepThinkResult;
+    let retries = 0;
+    const maxRetries = 30; // 30 second timeout
+    
     do {
         deepThinkResult = await system.aiSystem.processDeepThink();
         if (!deepThinkResult.completed) {
             await new Promise(resolve => setTimeout(resolve, 1000));
+            retries++;
+            if (retries >= maxRetries) {
+                throw new Error('Deep think timeout: exceeded maximum wait time');
+            }
         }
     } while (!deepThinkResult.completed);
     
@@ -360,13 +367,14 @@ aiSystem.registerAI(customAI.name, 'custom');
 ### Custom Chemistry Compound
 
 ```javascript
-// Add a protein structure
+// Add a protein structure (example values for demonstration)
+// Note: Real protein composition varies based on amino acid sequence
 chemTracker.addCompound('protein_alpha', {
-    C: 100,
-    H: 150,
-    O: 30,
-    N: 25,
-    S: 2
+    C: 100,  // Example carbon count
+    H: 150,  // Example hydrogen count
+    O: 30,   // Example oxygen count
+    N: 25,   // Example nitrogen count
+    S: 2     // Example sulfur count (from cysteine/methionine)
 });
 
 const weight = chemTracker.calculateMolecularWeight(

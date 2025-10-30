@@ -156,8 +156,10 @@ The golden ratio appears throughout nature and mathematics:
 
 **Properties**:
 - φ = (1 + √5) / 2 ≈ 1.618033988749895
-- φ² = φ + 1
-- 1/φ = φ - 1
+- φ² = φ + 1 (the golden ratio squared equals itself plus one)
+- 1/φ = φ - 1 (the reciprocal equals the ratio minus one, showing deep mathematical symmetry)
+
+These relationships emerge from the golden ratio's defining property: a/b = (a+b)/a, where φ = (a+b)/a. This unique mathematical property makes φ ubiquitous in nature, from spiral galaxies to DNA helices.
 
 **Applications**:
 1. **Vector Transformations**: v' = φ * v

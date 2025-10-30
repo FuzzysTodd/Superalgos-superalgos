@@ -4,7 +4,7 @@
  * This module handles integration with external APIs including
  * cryptocurrency exchanges and data providers.
  * 
- * @module api/integrations
+ * @module api/exchange
  */
 
 class ExchangeAPI {

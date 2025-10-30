@@ -21,6 +21,7 @@ class Visualization3D {
     this.camera = null;
     this.renderer = null;
     this.controls = null;
+    this.animating = false;
   }
   
   /**
@@ -63,11 +64,28 @@ class Visualization3D {
    * Animate the scene
    */
   animate() {
+    if (!this.animating) return;
+    
     requestAnimationFrame(() => this.animate());
     
     // TODO: Update scene
     // TODO: Render frame
     // this.renderer.render(this.scene, this.camera);
+  }
+  
+  /**
+   * Start animation loop
+   */
+  startAnimation() {
+    this.animating = true;
+    this.animate();
+  }
+  
+  /**
+   * Stop animation loop
+   */
+  stopAnimation() {
+    this.animating = false;
   }
   
   /**

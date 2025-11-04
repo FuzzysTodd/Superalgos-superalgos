@@ -1,0 +1,60 @@
+{
+  "name": "superalgos-extended",
+  "version": "0.1.0",
+  "description": "Virtual Augmentation & Visualization Platform for Computational Finance",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "build": "webpack --mode production",
+    "docs": "jsdoc -c jsdoc.json"
+  },
+  "keywords": [
+    "visualization",
+    "3d",
+    "tensor",
+    "augmented-reality",
+    "virtual-reality",
+    "holographic",
+    "trading",
+    "algorithms",
+    "finance",
+    "computational",
+    "webxr",
+    "threejs"
+  ],
+  "author": "Superalgos Extended Team",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FuzzysTodd/Superalgos-superalgos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FuzzysTodd/Superalgos-superalgos/issues"
+  },
+  "homepage": "https://github.com/FuzzysTodd/Superalgos-superalgos#readme",
+  "dependencies": {
+    "three": "^0.160.0",
+    "@tensorflow/tfjs": "^4.15.0",
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "axios": "^1.6.2",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.55.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "nodemon": "^3.0.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "jsdoc": "^4.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

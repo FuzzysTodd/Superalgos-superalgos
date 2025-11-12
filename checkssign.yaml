@@ -1,0 +1,44 @@
+name: Security & Signatures
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  signatures-and-guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate allowlist writes
+        run: |
+          echo "Validating changed paths..."
+          CHANGED=$(git diff --name-only HEAD~1 || true)
+          echo "$CHANGED" | grep -E '^(simulator/|tests/|docs/|\.agent/|\.github/)' || (echo "Illegal path change detected" && exit 1)
+
+      - name: Verify deploy-config signatures if changed
+        run: |
+          if git diff --name-only HEAD~1 | grep -q 'simulator/deploy-config.json'; then
+            python - <<'PY'
+import sys, json, hashlib, base64
+from ecdsa import VerifyingKey, SECP256k1
+def hash_payload(path):
+    data = open(path, "rb").read()
+    return hashlib.sha256(data).digest()
+vk = VerifyingKey.from_string(bytes.fromhex("04"+"0"*128), curve=SECP256k1)  # replace with your pubkey
+digest = hash_payload("simulator/deploy-config.json")
+sig = open("simulator/deploy-config.sig","rb").read()
+try:
+    vk.verify(sig, digest)
+    print("Signature valid.")
+except Exception as e:
+    print("Signature invalid:", e); sys.exit(1)
+PY
+          else
+            echo "No config change; skipping signature verification."
+          fi
+
+      - name: Static analysis
+        run: |
+          pip install bandit || true
+          bandit -q -r simulator || true

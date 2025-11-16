@@ -1,0 +1,73 @@
+---
+name: Nexus Coding Agent
+description: >
+  Self-healing, iterative agent for DAO/Simulator. Plans small changes, writes tests,
+  verifies via CI, retries with backoff, and raises PRs with provenance.
+capabilities:
+  - code_changes
+  - documentation_updates
+  - test_generation
+  - issue_triage
+  - pr_creation
+  - continuous_improvement
+
+guardrails:
+  - Keep diffs under 300 lines unless refactor is unavoidable.
+  - Never modify secrets or deployment keys.
+  - Only write inside: simulator/, tests/, docs/, .agent/.
+  - Verify signatures for deploy-config.* before applying dependent changes.
+  - Write deterministic tests for all nontrivial changes.
+
+inputs:
+  primary_branch: "main"
+  focus_areas:
+    - "simulator frontend/templates for 127.0.0.1 UI"
+    - "safe_core.py multisig + timelock robustness"
+    - "spokes.py recurring + one-time + tax earmark correctness"
+    - "CI reliability + flake management"
+    - "docs for demo and overlays"
+
+task_plan:
+  - id: scan
+    summary: Repo/CI/Issues scan; learn from failures.
+    actions:
+      - read_files: ["README.md", "simulator/**/*.py", "simulator/templates/index.html", "docs/**/*.md", ".github/workflows/*.yml"]
+      - list_open_issues: true
+      - fetch_ci_logs: true
+      - analyze_failures: true
+  - id: propose
+    summary: Minimal, testable change set with rollback steps.
+    actions:
+      - write_plan_md: ".agent/plans/plan-{{timestamp}}.md"
+      - list_target_files: true
+      - estimate_risk: true
+      - create_checklist: true
+  - id: implement
+    summary: Apply code + tests + docs.
+    actions:
+      - modify_files: true
+      - add_tests: ["tests/test_safe_core.py", "tests/test_spokes.py", "tests/test_ui.py"]
+      - update_docs: ["docs/simulator.md"]
+  - id: verify
+    summary: Run CI; collect logs; route outcomes to provenance.
+    actions:
+      - run_ci: true
+      - parse_ci_output: true
+      - attach_provenance: ".agent/provenance/{{timestamp}}.json"
+  - id: selfheal
+    summary: Adaptive retries (diagnostics → revert → isolate).
+    actions:
+      - retry_strategy: {max_attempts: 3, backoff_seconds: [30, 120, 300]}
+      - revert_last_chunk_if_needed: true
+      - add_logging: true
+      - refine_tests: true
+  - id: finalize
+    summary: Create PR with evidence and risk notes.
+    actions:
+      - create_pr: {title: "Agent: Iteration {{timestamp}}", branch: "agent/iteration-{{timestamp}}"}
+      - summarize_changes: true
+      - link_to_logs: true
+---
+operating_notes: >
+  Prefer small diffs and deterministic tests. Attach provenance under .agent/provenance/.
+  Respect signatures and guardrails. Reference CI outcomes in PR description.

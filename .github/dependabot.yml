@@ -4,11 +4,18 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     rebase-strategy: "auto"
     allow:
       - dependency-type: "direct"
-  # Enable security updates (Dependabot automatically raises security PRs when vulnerabilities are found)
+    ignore:
+      - dependency-name: "webpack-cli"
+        versions: [ ">=6.0.0" ]
+      - dependency-name: "three"
+        versions: [ ">=0.181.0" ]
+      - dependency-name: "eslint"
+        versions: [ ">=9.0.0" ]
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

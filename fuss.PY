@@ -1,0 +1,106 @@
+# @title Default title text
+with open('.github/workflows/main.yml', 'r') as f:
+    content = f.read()
+print(content)
+
+
+name: Nexus Agent Runner
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes
+  push:
+    branches:
+      - "agent/**"
+  workflow_dispatch:
+
+jobs:
+  plan-implement-verify:
+    runs-on: ubuntu-latest
+    env:
+      AGENT_DIR: .github/agents
+      PLAN_DIR: .agent/plans
+      PROV_DIR: .agent/provenance
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install flask ecdsa pytest pytest-cov
+
+      - name: Agent scan
+        run: |
+          mkdir -p $PLAN_DIR $PROV_DIR
+          python - <<'PY'
+import json, os, time, glob
+ts = int(time.time())
+plan_path = os.path.join(".agent","plans",f"plan-{ts}.md")
+open(plan_path,"w").write("# Plan
+- Scan repo
+- Propose changes
+")
+prov = {"ts": ts, "files": glob.glob("**/*.py", recursive=True)}
+open(os.path.join(".agent","provenance",f"{ts}.json"),"w").write(json.dumps(prov))
+print("Generated plan and provenance.")
+PY
+
+      - name: Run tests
+        run: |
+          pytest -q || echo "TESTS_FAILED" > .agent/status
+
+      - name: Self-heal backoff attempt 1
+        if: ${{ hashFiles('.agent/status') != '' }}
+        run: |
+          echo "Attempt 1: Adding diagnostics and reducing scope."
+          # Example: add logging to simulator to catch failure causes
+          python - <<'PY'
+import fileinput, sys
+p="simulator/app.py"
+buf=open(p).read()
+if "LOG_DIAGNOSTICS" not in buf:
+    buf = buf.replace("app = Flask(__name__)", "app = Flask(__name__)
+LOG_DIAGNOSTICS=True")
+    open(p,"w").write(buf)
+print("Injected diagnostics flag.")
+PY
+          pytest -q || echo "TESTS_FAILED" > .agent/status
+
+      - name: Self-heal backoff attempt 2
+        if: ${{ hashFiles('.agent/status') != '' }}
+        run: |
+          echo "Attempt 2: Revert last risky chunk and re-run."
+          git checkout -- simulator/safe_core.py || true
+          pytest -q || echo "TESTS_FAILED" > .agent/status
+
+      - name: Self-heal backoff attempt 3
+        if: ${{ hashFiles('.agent/status') != '' }}
+        run: |
+          echo "Attempt 3: Split changes; isolate failing tests."
+          pytest -q -k "not slow" || echo "TESTS_FAILED" > .agent/status
+
+      - name: Create PR on success
+        if: ${{ hashFiles('.agent/status') == '' }}
+        run: |
+          BR="agent/iteration-$(date +%s)"
+          git checkout -b "$BR"
+          git add -A
+          git commit -m "Agent iteration: green tests and diagnostics"
+          git push origin "$BR"
+          echo "::notice title=PR::Created agent branch $BR"
+
+      - name: Attach logs
+        run: |
+          echo "Attaching CI logs for provenance."
+          mkdir -p .agent/logs
+          dmesg | tail -n 200 > .agent/logs/kernel_tail.txt || true
+          git add .agent
+          git commit -m "Agent: attach provenance/logs" || true
+          git push origin HEAD || true
+

@@ -1,0 +1,16 @@
+<!-- config/app.config.xml -->
+<AppConfig>
+  <Environment name="demo" gpu="true" fpga="auto" port="5001" dashboard="true"/>
+  <DataSources>
+    <Source name="Superalgos" type="ws" url="ws://localhost:18041/signals" />
+    <Source name="MarketFeed" type="http" url="https://api.example.com/ticks" interval="1000"/>
+  </DataSources>
+  <Validator>
+    <Kernel name="ambiguity_score" blockSize="256" gridSize="1024" precision="fp32"/>
+    <Thresholds low="0.2" medium="0.5" high="0.8"/>
+  </Validator>
+  <Provenance write="true" dir="./provenance/runs" format="jsonl"/>
+  <Emit>
+    <Superalgos writeBack="true" topic="validated-signals"/>
+  </Emit>
+</AppConfig>
